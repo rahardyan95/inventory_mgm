@@ -1,0 +1,50 @@
+services:
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: inventory_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - db
+    networks:
+      - inventory_network
+
+  web:
+    image: nginx:alpine
+    container_name: inventory_web
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - inventory_network
+
+  db:
+    image: postgres:16-alpine
+    container_name: inventory_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-inventory_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+      POSTGRES_DB: ${DB_DATABASE:-inventory_mgm}
+    ports:
+      - "5432:5432"
+    volumes:
+      - inventory_db_data:/var/lib/postgresql/data
+    networks:
+      - inventory_network
+
+networks:
+  inventory_network:
+    driver: bridge
+
+volumes:
+  inventory_db_data:

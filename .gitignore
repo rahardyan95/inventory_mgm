@@ -1,0 +1,22 @@
+# Root-level ignores
+.DS_Store
+.vscode/
+.idea/
+
+# Backend and Mobile already have their own .gitignore files,
+# but we can explicitly ignore large folders just in case
+backend/vendor/
+backend/node_modules/
+mobile/node_modules/
+mobile/.expo/
+
+# Ignore database dumps or backup files
+*.sql
+*.tar.gz
+*.zip
+
+# Ignore sensitive files (environment & databases)
+.env
+.env.*.local
+*.sqlite
+*.sqlite3

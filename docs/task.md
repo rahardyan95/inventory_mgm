@@ -1,0 +1,6 @@
+- `[x]` Create `InventoryStatsWidget` (StatsOverviewWidget with 4 custom colored blocks).
+- `[x]` Create `StockDistributionChart` (Pie/Doughnut chart for categories).
+- `[x]` Create `RecentTransactionsWidget` (TableWidget for recent inbound/outbound).
+- `[x]` Update `InboundTransactionsChart` to span 2 columns and improve line chart styling.
+- `[x]` Configure Filament Dashboard grid and register all widgets in `AdminPanelProvider`.
+- `[x]` Test access restrictions (Manager/Super Admin vs Staff).
