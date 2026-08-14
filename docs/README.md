@@ -18,6 +18,7 @@ Semua dokumentasi proyek tersedia di folder `/docs`. Berikut panduan membaca dan
 | [DOCKER.md](./DOCKER.md) | **Panduan Docker** — perintah harian, migrasi mesin, backup DB | Developer |
 | [DEPLOY_VPS.md](./DEPLOY_VPS.md) | **Deploy ke VPS** — setup server, HTTPS, monitoring | DevOps, Developer |
 | [BUILD_MOBILE.md](./BUILD_MOBILE.md) | **Build APK/IPA** — Android & iOS, cara instalasi | Developer, QA |
+| [RELEASE.md](./RELEASE.md) | **Panduan GitHub Release** — langkah + template body untuk portofolio | Developer |
 
 ---
 
