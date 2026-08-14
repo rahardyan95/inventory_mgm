@@ -24,8 +24,29 @@ Release di GitHub menampilkan versi, catatan perubahan (changelog), dan **asset*
 
 Install dulu (Windows):
 ```powershell
-winget install --id GitHub.cli
-gh auth login   # pilih GitHub.com > HTTPS > login di browser
+winget install --id GitHub.cli --accept-source-agreements --accept-package-agreements
+```
+
+Jika perintah `gh` tidak dikenali di terminal yang sedang terbuka (PATH belum dimuat):
+```cmd
+:: Opsi 1: buka terminal BARU (paling mudah — PATH langsung aktif)
+:: Opsi 2: muat PATH di sesi berjalan tanpa menutup terminal
+set PATH=%PATH%;C:\Program Files\GitHub CLI
+```
+
+Autentikasi (satu kali saja):
+```powershell
+gh auth login
+# Pilih: GitHub.com > HTTPS > Authenticate Git with your GitHub credentials > Yes > Login with a web browser
+# Browser terbuka > klik Authorize
+```
+
+Verifikasi login:
+```powershell
+gh auth status
+# Contoh output sukses:
+#   ✓ Logged in to github.com account <username> (keyring)
+#   - Git operations protocol: https
 ```
 
 Lalu buat release:
@@ -39,6 +60,10 @@ gh release create v2.4.0 "docs/screenshots/dashboard.png" --target main --title 
 # Update asset ke release yang sudah ada
 gh release upload v2.4.0 docs/screenshots/dashboard.png
 ```
+
+> **Catatan:** Tag `v2.4.0` dibuat otomatis saat release pertama. Untuk rilis berikutnya cukup ganti nomor versi (mis. `v2.5.0`) — tag baru akan dibuat otomatis juga.
+
+**Release yang sudah dibuat:** https://github.com/rahardyan95/inventory_mgm/releases/tag/v2.4.0
 
 ---
 
