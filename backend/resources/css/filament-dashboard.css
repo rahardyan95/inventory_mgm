@@ -1,0 +1,73 @@
+/* ============================================================
+   Kustomisasi Dashboard — Enterprise Inventory Management
+   Didaftarkan via FilamentView::registerRenderHook (HEAD_START)
+   ============================================================ */
+
+/* ---------- Stats Cards: gradient modern ---------- */
+.fi-stats-card {
+    border-radius: 1.25rem !important;
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fi-stats-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px -8px rgb(0 0 0 / 0.25);
+}
+
+.fi-stats-blue {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+}
+
+.fi-stats-orange {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+}
+
+.fi-stats-green {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+}
+
+.fi-stats-cyan {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+}
+
+.fi-stats-card .fi-wi-stats-overview-stat {
+    background: transparent !important;
+}
+
+.fi-stats-card .fi-wi-stats-overview-stat-title,
+.fi-stats-card .fi-wi-stats-overview-stat-number,
+.fi-stats-card .fi-wi-stats-overview-stat-description {
+    color: #fff !important;
+}
+
+.fi-stats-card .fi-wi-stats-overview-stat-description {
+    opacity: 0.9;
+}
+
+.fi-stats-card svg {
+    color: rgb(255 255 255 / 0.85) !important;
+}
+
+/* Chart line pada kartu statistik tetap terlihat */
+.fi-stats-card .fi-wi-stats-overview-stat-chart {
+    opacity: 0.9;
+}
+
+/* ---------- Widget grafik: kartu rapi ---------- */
+.fi-wi-chart,
+.fi-wi-table {
+    border-radius: 1.25rem !important;
+    box-shadow: 0 4px 16px -8px rgb(0 0 0 / 0.12);
+}
+
+.fi-wi-chart canvas {
+    min-height: 240px;
+}
+
+/* ---------- Heading dashboard ---------- */
+.fi-page-heading h1 {
+    font-weight: 800 !important;
+    letter-spacing: -0.02em;
+}

@@ -45,4 +45,63 @@ class TransactionResource extends Resource
             'edit' => EditTransaction::route('/{record}/edit'),
         ];
     }
+
+    // =========================================================
+    // ANTI-FRAUD / ROLE-BASED ACCESS CONTROL
+    // =========================================================
+
+    /**
+     * Semua role terdaftar boleh melihat menu transaksi.
+     */
+    public static function canViewAny(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Semua role boleh membuat transaksi.
+     */
+    public static function canCreate(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Edit transaksi:
+     * - Manajer & Super Admin: boleh.
+     * - Staff: hanya transaksi miliknya sendiri yang MASIH pending
+     *   (belum disetujui). Jika sudah approved oleh manajer/super admin,
+     *   tidak dapat diedit lagi.
+     */
+    public static function canEdit($record): bool
+    {
+        $user = auth()->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        if ($user->hasAnyRole(['super_admin', 'manager'])) {
+            return true;
+        }
+
+        if ($user->hasRole('staff')) {
+            return $record->user_id === $user->id && $record->status !== 'approved';
+        }
+
+        return false;
+    }
+
+    /**
+     * Staff TIDAK bisa menghapus transaksi — hanya Manajer & Super Admin.
+     */
+    public static function canDelete($record): bool
+    {
+        return auth()->user()?->hasAnyRole(['super_admin', 'manager']) ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->hasAnyRole(['super_admin', 'manager']) ?? false;
+    }
 }

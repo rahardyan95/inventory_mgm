@@ -78,14 +78,16 @@ class ProductsTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn (): bool => ! auth()->user()?->hasRole('staff')),
+                \Filament\Actions\DeleteAction::make()
+                    ->visible(fn (): bool => auth()->user()?->hasRole('staff')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
-                ]),
+                ])
+                    ->visible(fn (): bool => auth()->user()?->hasAnyRole(['super_admin', 'manager'])),
             ]);
     }
 }

@@ -2,8 +2,9 @@
 
 namespace App\Filament\Components;
 
-use Filament\Notifications\Livewire\DatabaseNotifications;
-use Filament\Actions\Action;
+use Filament\Enums\DatabaseNotificationsPosition;
+use Filament\Livewire\DatabaseNotifications;
+use Illuminate\Contracts\View\View;
 
 /**
  * Custom Database Notifications Component
@@ -11,6 +12,10 @@ use Filament\Actions\Action;
  * Override komponen bawaan Filament agar notifikasi tidak otomatis hilang
  * (tidak di-mark as read) saat diklik satu-satu. Notifikasi hanya akan hilang
  * jika user menekan tombol "Bersihkan".
+ * 
+ * Meng-extends Filament\Livewire\DatabaseNotifications (bukan base di
+ * Filament\Notifications\Livewire) agar trigger lonceng di topbar ikut
+ * dirender dengan posisi & polling dari konfigurasi panel.
  */
 class PersistentDatabaseNotifications extends DatabaseNotifications
 {
@@ -26,11 +31,21 @@ class PersistentDatabaseNotifications extends DatabaseNotifications
 
     /**
      * Override tombol "Tandai semua sudah dibaca".
-     * Disembunyikan agar user menggunakan tombol "Bersihkan" (clearNotificationsAction) 
+     * Disembunyikan agar user menggunakan tombol "Bersihkan" (clearNotificationsAction)
      * jika ingin menghilangkan notifikasi.
      */
-    public function markAllNotificationsAsReadAction(): Action
+    public function markAllNotificationsAsReadAction(): \Filament\Actions\Action
     {
         return parent::markAllNotificationsAsReadAction()->hidden();
+    }
+
+    /**
+     * Trigger lonceng modern di topbar (dengan badge + animasi pulse).
+     */
+    public function getTrigger(): ?View
+    {
+        return (($this->position ?? filament()->getDatabaseNotificationsPosition()) === DatabaseNotificationsPosition::Topbar)
+            ? view('filament.components.topbar-database-notifications-trigger')
+            : view('filament-panels::components.sidebar.database-notifications-trigger');
     }
 }

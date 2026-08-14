@@ -55,4 +55,50 @@ class SupplierResource extends Resource
                 SoftDeletingScope::class,
             ]);
     }
+
+    // =========================================================
+    // ROLE-BASED ACCESS
+    // =========================================================
+
+    /**
+     * Semua role boleh melihat supplier.
+     */
+    public static function canViewAny(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Hanya Manajer & Super Admin yang boleh membuat supplier.
+     */
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->hasAnyRole(['super_admin', 'manager']) ?? false;
+    }
+
+    /**
+     * Hanya Manajer & Super Admin yang boleh mengedit supplier.
+     */
+    public static function canEdit($record): bool
+    {
+        return auth()->user()?->hasAnyRole(['super_admin', 'manager']) ?? false;
+    }
+
+    /**
+     * Hanya Manajer & Super Admin yang boleh menghapus supplier.
+     */
+    public static function canDelete($record): bool
+    {
+        return auth()->user()?->hasAnyRole(['super_admin', 'manager']) ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->hasAnyRole(['super_admin', 'manager']) ?? false;
+    }
+
+    public static function canRestore($record): bool
+    {
+        return auth()->user()?->hasAnyRole(['super_admin', 'manager']) ?? false;
+    }
 }

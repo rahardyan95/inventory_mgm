@@ -75,11 +75,15 @@ class RoleSeeder extends Seeder
         // LANGKAH 3: Buat roles dan assign permissions
         // -------------------------------------------------------
 
-        // Super Admin: Fokus pada manajemen User dan Audit (Pembuatan akun Staf)
+        // Super Admin: Fokus pada manajemen User dan Audit, plus akses transaksi
         $superAdmin = Role::firstOrCreate(['name' => 'super_admin']);
         $superAdmin->givePermissionTo([
             'user.view', 'user.create', 'user.edit', 'user.delete',
             'audit.view',
+            'product.view',
+            'supplier.view',
+            'transaction.view', 'transaction.create', 'transaction.approve',
+            'report.view', 'report.export',
         ]);
 
         // Manager: Akses TERTINGGI operasional (Semua data produk, transaksi, laporan)

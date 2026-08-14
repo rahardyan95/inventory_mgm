@@ -2,10 +2,12 @@
 
 namespace App\Filament\Resources\Transactions\Tables;
 
+use App\Models\Transaction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 /**
@@ -25,38 +27,71 @@ class TransactionsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('transaction_date', 'desc')
             ->columns([
                 TextColumn::make('reference_number')
                     ->label('Reference Number')
-                    ->searchable(),
+                    ->searchable()
+                    ->wrap(),
                 TextColumn::make('type')
-                    ->label('Type')
+                    ->label('Jenis Transaksi')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'inbound'    => 'success',
+                        'outbound'   => 'danger',
+                        'adjustment' => 'warning',
+                        default      => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'inbound'    => 'Barang Masuk',
+                        'outbound'   => 'Barang Keluar',
+                        'adjustment' => 'Penyesuaian Stok',
+                        default      => $state,
+                    })
+                    ->searchable(),
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'approved' => 'success',
+                        'pending'  => 'warning',
+                        'rejected' => 'danger',
+                        'cancelled'=> 'gray',
+                        default    => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'approved' => 'Disetujui',
+                        'pending'  => 'Menunggu Persetujuan',
+                        'rejected' => 'Ditolak',
+                        'cancelled'=> 'Dibatalkan',
+                        default    => $state,
+                    })
                     ->searchable(),
                 TextColumn::make('user.name')
                     ->label('Created By')
-                    ->searchable(),
-                // Mengambil nama supplier melalui relasi, bukan sekadar ID
-                TextColumn::make('supplier.name')
-                    ->label('Supplier')
                     ->searchable()
-                    ->placeholder('-'),
+                    ->wrap(),
                 TextColumn::make('transaction_date')
-                    ->label('Transaction Date')
+                    ->label('Tanggal Transaksi')
                     ->date()
                     ->sortable(),
-                TextColumn::make('status')
-                    ->label('Status')
-                    ->searchable(),
-                // Mengambil nama manager (approver) dari relasi approver() di model Transaction
+                // Kolom sekunder — tersembunyi secara default agar tabel pas di layar
+                TextColumn::make('supplier.company_name')
+                    ->label('Supplier')
+                    ->searchable()
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('approver.name')
                     ->label('Approved By')
                     ->sortable()
-                    ->placeholder('-'),
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('approved_at')
                     ->label('Approved At')
                     ->dateTime()
                     ->sortable()
-                    ->placeholder('-'),
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -67,16 +102,32 @@ class TransactionsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                // Tambahkan filter spesifik di sini (misal filter berdasarkan status/tipe)
+                SelectFilter::make('type')
+                    ->label('Jenis Transaksi')
+                    ->options([
+                        'inbound'    => 'Barang Masuk',
+                        'outbound'   => 'Barang Keluar',
+                        'adjustment' => 'Penyesuaian Stok',
+                    ]),
+                SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        'pending'  => 'Menunggu Persetujuan',
+                        'approved' => 'Disetujui',
+                        'rejected' => 'Ditolak',
+                        'cancelled'=> 'Dibatalkan',
+                    ]),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn (Transaction $record): bool => auth()->user()?->hasAnyRole(['super_admin', 'manager'])
+                        || (auth()->user()?->hasRole('staff') && $record->user_id === auth()->id() && $record->status !== 'approved')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
-                ]),
+                ])
+                    ->visible(fn (): bool => auth()->user()?->hasAnyRole(['super_admin', 'manager'])),
             ]);
     }
 }
-

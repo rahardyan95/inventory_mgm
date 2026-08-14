@@ -24,7 +24,6 @@ use App\Models\Transaction;
 use App\Models\TransactionItem;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
-
 class InventoryService
 {
     /**
@@ -87,6 +86,9 @@ class InventoryService
 
             // Muat relasi items untuk response
             $transaction->load('items.product');
+
+            // Kirim notifikasi stok menipis (jika ada produk di bawah minimum)
+            app(InventoryNotificationService::class)->notifyLowStockProducts();
 
             return $transaction;
         });

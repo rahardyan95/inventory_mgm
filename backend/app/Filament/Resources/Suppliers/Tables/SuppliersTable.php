@@ -46,14 +46,16 @@ class SuppliersTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn (): bool => auth()->user()?->hasAnyRole(['super_admin', 'manager'])),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
-                ]),
+                ])
+                    ->visible(fn (): bool => auth()->user()?->hasAnyRole(['super_admin', 'manager'])),
             ]);
     }
 }

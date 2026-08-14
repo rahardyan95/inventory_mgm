@@ -15,9 +15,17 @@ class SupplierCrudTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_can_render_supplier_list_page()
+    private function makeManager(): User
     {
         $user = User::factory()->create();
+        $user->assignRole('manager');
+
+        return $user;
+    }
+
+    public function test_can_render_supplier_list_page()
+    {
+        $user = $this->makeManager();
         $this->actingAs($user);
 
         $this->get(SupplierResource::getUrl('index'))->assertSuccessful();
@@ -25,7 +33,7 @@ class SupplierCrudTest extends TestCase
 
     public function test_can_render_supplier_create_page()
     {
-        $user = User::factory()->create();
+        $user = $this->makeManager();
         $this->actingAs($user);
 
         $this->get(SupplierResource::getUrl('create'))->assertSuccessful();
@@ -33,7 +41,7 @@ class SupplierCrudTest extends TestCase
 
     public function test_can_create_supplier()
     {
-        $user = User::factory()->create();
+        $user = $this->makeManager();
         $this->actingAs($user);
 
         Livewire::test(CreateSupplier::class)
@@ -56,7 +64,7 @@ class SupplierCrudTest extends TestCase
 
     public function test_can_render_supplier_edit_page()
     {
-        $user = User::factory()->create();
+        $user = $this->makeManager();
         $this->actingAs($user);
 
         $supplier = Supplier::create([
@@ -69,7 +77,7 @@ class SupplierCrudTest extends TestCase
 
     public function test_can_update_supplier()
     {
-        $user = User::factory()->create();
+        $user = $this->makeManager();
         $this->actingAs($user);
 
         $supplier = Supplier::create([
@@ -96,7 +104,7 @@ class SupplierCrudTest extends TestCase
 
     public function test_can_delete_supplier()
     {
-        $user = User::factory()->create();
+        $user = $this->makeManager();
         $this->actingAs($user);
 
         $supplier = Supplier::create([
@@ -109,5 +117,26 @@ class SupplierCrudTest extends TestCase
             ->callAction('delete');
 
         $this->assertSoftDeleted('suppliers', ['id' => $supplier->id]);
+    }
+
+    public function test_staff_cannot_create_edit_or_delete_supplier()
+    {
+        $staff = User::factory()->create();
+        $staff->assignRole('staff');
+        $this->actingAs($staff);
+
+        // Staff hanya bisa melihat — akses create/edit diblokir
+        $this->get(SupplierResource::getUrl('create'))->assertForbidden();
+
+        $supplier = Supplier::create(['company_name' => 'PT Staff View']);
+
+        $this->get(SupplierResource::getUrl('edit', ['record' => $supplier]))->assertForbidden();
+
+        $this->assertFalse(SupplierResource::canCreate());
+        $this->assertFalse(SupplierResource::canEdit($supplier));
+        $this->assertFalse(SupplierResource::canDelete($supplier));
+
+        // Halaman list tetap bisa diakses
+        $this->get(SupplierResource::getUrl('index'))->assertSuccessful();
     }
 }

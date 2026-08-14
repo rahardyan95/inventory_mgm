@@ -55,4 +55,50 @@ class ProductResource extends Resource
                 SoftDeletingScope::class,
             ]);
     }
+
+    // =========================================================
+    // ROLE-BASED ACCESS
+    // =========================================================
+
+    /**
+     * Semua role boleh melihat produk.
+     */
+    public static function canViewAny(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Staff boleh membuat produk baru.
+     */
+    public static function canCreate(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Hanya Manajer & Super Admin yang boleh mengedit produk.
+     */
+    public static function canEdit($record): bool
+    {
+        return auth()->user()?->hasAnyRole(['super_admin', 'manager']) ?? false;
+    }
+
+    /**
+     * Staff boleh menghapus produk (soft delete).
+     */
+    public static function canDelete($record): bool
+    {
+        return true;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return true;
+    }
+
+    public static function canRestore($record): bool
+    {
+        return auth()->user()?->hasAnyRole(['super_admin', 'manager']) ?? false;
+    }
 }

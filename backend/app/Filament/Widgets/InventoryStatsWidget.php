@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Product;
+use App\Models\Transaction;
 use App\Models\TransactionItem;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -10,81 +11,109 @@ use Illuminate\Support\Carbon;
 
 /**
  * Widget: InventoryStatsWidget
- * 
- * Menampilkan ringkasan statistik (angka-angka kunci) di bagian paling atas Dasbor.
- * Berfungsi sebagai indikator cepat (KPI) untuk kondisi gudang.
+ *
+ * Menampilkan ringkasan statistik (angka-angka kunci) di bagian paling atas Dashboard.
+ * Data grafik mini (sparkline) diambil dari data transaksi nyata, bukan angka statis,
+ * sehingga selalu ter-update mengikuti aktivitas gudang.
  */
 class InventoryStatsWidget extends BaseWidget
 {
-    /**
-     * Urutan kemunculan widget di dasbor.
-     */
     protected static ?int $sort = 1;
-    
-    /**
-     * Lebar widget. 'full' berarti memakan 100% lebar grid.
-     */
+
     protected int | string | array $columnSpan = 'full';
 
     /**
-     * Menghasilkan array metrik (Stat) yang akan di-render.
-     * Mengkalkulasi data Inbound dan Outbound khusus untuk bulan berjalan.
-     * 
-     * @return array
+     * Non-lazy: statistik langsung dirender saat halaman dimuat.
      */
+    protected static bool $isLazy = false;
+
+    /**
+     * Data tren inbound/outbound 7 hari terakhir untuk sparkline.
+     *
+     * @return array{labels: array, inbound: array, outbound: array}
+     */
+    private function getSevenDayTrend(): array
+    {
+        $labels = [];
+        $inbound = [];
+        $outbound = [];
+
+        for ($i = 6; $i >= 0; $i--) {
+            $day = Carbon::today()->subDays($i);
+
+            $labels[] = $day->format('d/m');
+
+            $inbound[] = TransactionItem::whereHas('transaction', fn ($q) => $q
+                ->where('type', 'inbound')
+                ->whereDate('transaction_date', $day))
+                ->sum('quantity');
+
+            $outbound[] = TransactionItem::whereHas('transaction', fn ($q) => $q
+                ->where('type', 'outbound')
+                ->whereDate('transaction_date', $day))
+                ->sum('quantity');
+        }
+
+        return compact('labels', 'inbound', 'outbound');
+    }
+
     protected function getStats(): array
     {
         $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
 
-        $totalInbound = TransactionItem::whereHas('transaction', function ($q) use ($currentMonth, $currentYear) {
-            $q->where('type', 'inbound')
-              ->whereMonth('transaction_date', $currentMonth)
-              ->whereYear('transaction_date', $currentYear);
-        })->sum('quantity');
+        $trend = $this->getSevenDayTrend();
 
-        $totalOutbound = TransactionItem::whereHas('transaction', function ($q) use ($currentMonth, $currentYear) {
-            $q->where('type', 'outbound')
-              ->whereMonth('transaction_date', $currentMonth)
-              ->whereYear('transaction_date', $currentYear);
-        })->sum('quantity');
+        $totalInbound = TransactionItem::whereHas('transaction', fn ($q) => $q
+            ->where('type', 'inbound')
+            ->whereMonth('transaction_date', $currentMonth)
+            ->whereYear('transaction_date', $currentYear))
+            ->sum('quantity');
+
+        $totalOutbound = TransactionItem::whereHas('transaction', fn ($q) => $q
+            ->where('type', 'outbound')
+            ->whereMonth('transaction_date', $currentMonth)
+            ->whereYear('transaction_date', $currentYear))
+            ->sum('quantity');
+
+        $monthLabel = Carbon::now()->translatedFormat('F Y');
 
         $stats = [
             Stat::make('Total Produk', Product::count())
-                ->description('Jumlah jenis produk')
+                ->description('Jenis produk terdaftar')
                 ->descriptionIcon('heroicon-m-cube')
                 ->color('info')
-                ->chart([7, 2, 10, 3, 15, 4, 17])
+                ->chart($trend['inbound'])
                 ->extraAttributes([
-                    'class' => 'bg-blue-500 text-white',
+                    'class' => 'fi-stats-card fi-stats-blue',
                 ]),
             Stat::make('Stok Menipis', Product::lowStock()->count())
-                ->description('Produk butuh restock')
+                ->description('Produk perlu restock')
                 ->descriptionIcon('heroicon-m-exclamation-triangle')
                 ->color('danger')
-                ->chart([17, 16, 14, 15, 14, 13, 12])
+                ->chart($trend['outbound'])
                 ->extraAttributes([
-                    'class' => 'bg-orange-500 text-white',
+                    'class' => 'fi-stats-card fi-stats-orange',
                 ]),
         ];
 
         $user = auth()->user();
         if ($user && $user->hasAnyRole(['super_admin', 'manager'])) {
-            $stats[] = Stat::make('Total Inbound', $totalInbound)
-                ->description('Barang masuk bulan ini')
+            $stats[] = Stat::make('Total Barang Masuk', $totalInbound)
+                ->description("Bulan {$monthLabel}")
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success')
-                ->chart([15, 4, 10, 2, 12, 4, 12])
+                ->chart($trend['inbound'])
                 ->extraAttributes([
-                    'class' => 'bg-emerald-500 text-white',
+                    'class' => 'fi-stats-card fi-stats-green',
                 ]);
-            $stats[] = Stat::make('Total Outbound', $totalOutbound)
-                ->description('Barang keluar bulan ini')
+            $stats[] = Stat::make('Total Barang Keluar', $totalOutbound)
+                ->description("Bulan {$monthLabel}")
                 ->descriptionIcon('heroicon-m-arrow-trending-down')
                 ->color('primary')
-                ->chart([1, 4, 2, 10, 5, 4, 15])
+                ->chart($trend['outbound'])
                 ->extraAttributes([
-                    'class' => 'bg-cyan-500 text-white',
+                    'class' => 'fi-stats-card fi-stats-cyan',
                 ]);
         }
 

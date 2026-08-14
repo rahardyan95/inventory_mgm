@@ -38,6 +38,9 @@ class Supplier extends Model
         'contact_person',
         'email',
         'phone',
+        'npwp',
+        'payment_terms',
+        'notes',
         'address',
         'is_active',
     ];
